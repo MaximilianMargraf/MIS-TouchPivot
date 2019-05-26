@@ -2,7 +2,6 @@ package com.example.mis_final_project_touchpivot;
 
 import android.Manifest;
 import android.content.pm.ActivityInfo;
-import android.nfc.Tag;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
@@ -17,21 +16,11 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellValue;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
@@ -61,11 +50,6 @@ public class MainActivity extends AppCompatActivity {
 
         String url1 = "https://data.london.gov.uk/download/number-bicycle-hires/ac29363e-e0cb-47cc-a97a-e216d900a6b0/tfl-daily-cycle-hires.xls";
         new XLSAsync().execute(url1);
-
-    }
-
-    private void readExcelData(String filepath){
-
     }
 
     // return the value of the cell as a String
@@ -173,7 +157,6 @@ public class MainActivity extends AppCompatActivity {
                 // get rows
                 for(int i = 0; i < rowCount; i++){
                     Row row = sheet.getRow(i);
-                    int cellCount = row.getPhysicalNumberOfCells();
                     // get only the first 2 columns
                     for(int j = 0; j < 2; j++){
                         String value = getCellAsString(row, j,formulaEvaluator);
