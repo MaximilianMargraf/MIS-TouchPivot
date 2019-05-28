@@ -24,6 +24,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
 
 import static org.apache.poi.ss.usermodel.Cell.CELL_TYPE_BOOLEAN;
 import static org.apache.poi.ss.usermodel.Cell.CELL_TYPE_NUMERIC;
@@ -36,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     // declare variables
     ArrayList<StringIntegerPair> stringIntegerPairs;
     ListView listView;
+    ArrayAdapter<String> adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,27 +46,13 @@ public class MainActivity extends AppCompatActivity {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.activity_main);
 
+        checkPermission();
+
         listView = (ListView) findViewById(R.id.data_view);
         stringIntegerPairs = new ArrayList<>();
 
-        checkPermission();
-
         String url1 = "https://data.london.gov.uk/download/number-bicycle-hires/ac29363e-e0cb-47cc-a97a-e216d900a6b0/tfl-daily-cycle-hires.xls";
         new XLSAsync().execute(url1);
-
-        // to only string list for the listview
-        ArrayList<String> listPrint = new ArrayList<>();
-        listPrint.add("Date : Number of cycle hires");
-        for(StringIntegerPair sp: stringIntegerPairs){
-            listPrint.add(sp.getDate() +" : "+ sp.getHires());
-        }
-        
-        for(String sp: listPrint){
-            Log.d(TAG, sp);
-        }
-
-        ArrayAdapter adapter = new ArrayAdapter<String>(this, R.layout.activity_listview, listPrint);
-        listView.setAdapter(adapter);
     }
 
     // android version of level <= 26
@@ -84,17 +72,15 @@ public class MainActivity extends AppCompatActivity {
 
     // https://developer.android.com/reference/android/os/AsyncTask
     // tasks like this need to be done in a separate thread!
+    // for now, this only works for the daily bike hires
     private class XLSAsync extends AsyncTask<String, Integer, Boolean> {
         @Override
         protected Boolean doInBackground(String... urls){
             try{
-                Log.i(TAG, "Set up URL");
+                Log.i(TAG, "XLSAsync: Started");
                 // set URL for download.
                 URL url = new URL (urls[0]);
-                Log.i(TAG, "Establishing URL connection");
                 URLConnection uc = url.openConnection();
-
-                System.out.println("Trying to print that Input Stream: "+uc.getInputStream());
 
                 HSSFWorkbook workbook = new HSSFWorkbook(uc.getInputStream());
                 HSSFSheet sheet = workbook.getSheetAt(1);
@@ -105,13 +91,9 @@ public class MainActivity extends AppCompatActivity {
                 // get rows
                 for(int i = 0; i < rowCount; i++){
                     Row row = sheet.getRow(i);
-                    // get only the first 2 columns
+                    // get only the first 2 columns for daily bike hires
                     for(int j = 0; j < 2; j++){
                         String value = getCellAsString(row, j,formulaEvaluator);
-
-                        // print data from cells for "visual debugging"
-                        //String cellInfo = "i:"+i+"; j:"+j+"; v:" +value;
-                        //Log.d(TAG, "readExcelData: Data from row: "+cellInfo);
 
                         // attach data to stringbuilder
                         sb.append(value + ",");
@@ -125,7 +107,25 @@ public class MainActivity extends AppCompatActivity {
             catch (IOException e){
                 Log.e(TAG, "readExcelData: Error reading inputstream " + e.getMessage());
             }
+
             return true;
+        }
+
+        // called on main thread after async task is done
+        @Override
+        protected void onPostExecute(Boolean result){
+            ArrayList<String> listPrint = new ArrayList<>();
+            listPrint.add("Date : Number of cycle hires");
+            for(StringIntegerPair sp: stringIntegerPairs){
+                listPrint.add(sp.getDate() +" : "+ sp.getHires());
+            }
+
+            for(String sp: listPrint){
+                Log.d(TAG, sp);
+            }
+
+            adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.activity_listview, listPrint);
+            listView.setAdapter(adapter);
         }
     }
 
@@ -172,27 +172,30 @@ public class MainActivity extends AppCompatActivity {
         // split stringbuilder into rows
         String[] rows = stringBuilder.toString().split(",");
 
-        for(int i  = 0; i < rows.length; i++){
-            Log.d(TAG, rows[i]);
-        }
         String date = "";
         int hires = 0;
-        // split columns at ,
-        for(int i = 2; i<rows.length; i++){
-            try{
-                // check if first (date) or second entry (value)
-                if(i%2==0) {
-                    date = rows[i];
-                }
-                // if a second entry
-                else{
-                    hires = Integer.parseInt(rows[i].substring(0, rows[i].length()-2));
+        try{
+            for(int i = 2; i<rows.length; i++){
+
+                    // check if first (date) or second entry (value)
+                    if(i%2==0) {
+                        Log.d(TAG, rows[i]);
+                        date = rows[i];
+                    }
+                    // if a second entry
+                    else{
+                        Log.d(TAG, rows[i]);
+                        hires = Integer.parseInt(rows[i].substring(0, rows[i].length()-2));
+                        StringIntegerPair k = new StringIntegerPair(date, hires);
+                        stringIntegerPairs.add(k);
+                    }
                 }
             }
-            catch (NumberFormatException e){
-                Log.e(TAG, "parseStringBuilder: NumberFormatException: "+e.getMessage());
-            }
+        catch (NumberFormatException e){
+            Log.e(TAG, "parseStringBuilder: NumberFormatException: "+e.getMessage());
         }
+        // we do not reach this line of code
+        Log.d(TAG,"Reading from xls into StringIntegerPair completed");
         printDataLog();
     }
 
