@@ -53,3 +53,8 @@ google-services.json
 freeline.py
 freeline/
 freeline_project_description.json
+
+# ignore temp files
+.idea/caches/build_file_checksums.ser
+.idea/caches/gradle_models.ser
+.idea/vcs.xml
