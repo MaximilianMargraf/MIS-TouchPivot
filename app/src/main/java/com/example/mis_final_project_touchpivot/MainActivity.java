@@ -3,14 +3,13 @@ package com.example.mis_final_project_touchpivot;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
+import android.content.res.AssetManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TableLayout;
 import android.widget.TableRow;
@@ -24,11 +23,12 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellValue;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.URL;
-import java.net.URLConnection;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,12 +42,13 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
 
     //Table that will include all our data for KIS
-    List<KSI> myData = new ArrayList<>();
+    List<Movie> myData = new ArrayList<>();
     Context context = this;
     TextView cm1;
     TextView cm2;
     TableLayout table;
     Button compare;
+    int last_row = 300;
 
     // lists with values from selected columns, the 0st entry is the name of the column
     List<String> selection1 = new ArrayList<>();
@@ -78,8 +79,9 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // read in table from URL with Async Task
-        SCpair p = new SCpair("https://data.london.gov.uk/download/road-casualties-severity-borough/a883bd65-c504-43bd-9032-efd71349385e/road-casualties-severity-borough.xls", this);
-        new RoadCasualties().execute(p);
+        // the data comes from here_ https://www.tableau.com/sites/default/files/pages/movies.xlsx
+        MovieReader movieReader = new MovieReader();
+        movieReader.execute();
     }
 
     public Context getContext(){
@@ -103,35 +105,30 @@ public class MainActivity extends AppCompatActivity {
 
     // https://developer.android.com/reference/android/os/AsyncTask
     // tasks like this need to be done in a separate thread!
-    private class RoadCasualties extends AsyncTask<SCpair, Integer, Context> {
+    private class MovieReader extends AsyncTask<SCpair, Integer, Context> {
         @Override
         protected Context doInBackground(SCpair... url_){
             try{
-                ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-                URL url = new URL (url_[0].getString_());
-                URLConnection uc = url.openConnection();
+                // Get to the xls file in assets
+                AssetManager am = MainActivity.this.getAssets();
+                InputStream is = am.open("movies.xls");
 
-                HSSFWorkbook workbook = new HSSFWorkbook(uc.getInputStream());
+                // create an HSSf workbook
+                HSSFWorkbook workbook = new HSSFWorkbook(is);
                 FormulaEvaluator formulaEvaluator = workbook.getCreationHelper().createFormulaEvaluator();
+                Log.i(TAG, "HSSF workbook created");
 
-                // page 1
-                HSSFSheet sheet1 = workbook.getSheetAt(1);
-                HSSFSheet sheet2 = workbook.getSheetAt(2);
+                HSSFSheet sheet = workbook.getSheetAt(0);
                 StringBuilder sb = new StringBuilder();
 
-                for(int i = 2; i < 12; i++){
-                    Row row = sheet1.getRow(i+10);
-                    for(int j = 0; j < 2; j++){
+                for(int i = 1; i < last_row; i++){
+                    Row row = sheet.getRow(i);
+                    for(int j = 0; j < 8; j++) {
                         String value = getCellAsString(row, j, formulaEvaluator);
-                        sb.append(value + ",");
-                    }
-                    row = sheet2.getRow(i);
-                    for(int j = 1; j < 7; j++){
-                        String value = getCellAsString(row, j, formulaEvaluator);
-                        sb.append(value + ",");
+                        sb.append(value + "§");
                     }
                 }
-                Log.i(TAG, "String Builder done, on to parsing the string");
+                //Log.i(TAG, "String Builder done, on to parsing the string");
                 parseStringBuilder(sb);
             }
             catch (FileNotFoundException e) {
@@ -146,41 +143,41 @@ public class MainActivity extends AppCompatActivity {
         // called on main thread after async task is done
         @Override
         protected void onPostExecute(Context context){
-            String[][] strings = new String[11][8];
-            strings[0][0] = "Year";
-            strings[0][1] = "L. term";
-            strings[0][2] = "KSI pedestrian";
-            strings[0][3] = "KSI pedal/cycle";
-            strings[0][4] = "KSI 2 wheels";
-            strings[0][5] = "KSI car/taxi";
-            strings[0][6] = "KSI bus/coach";
-            strings[0][7] = "KSI other";
+            String[][] strings = new String[last_row][8];
+            strings[0][0] = "Title";
+            strings[0][1] = "Ww. Gross";
+            strings[0][2] = "Budget";
+            strings[0][3] = "Released";
+            strings[0][4] = "Genre";
+            strings[0][5] = "Director";
+            strings[0][6] = "Rotten Tomatoes";
+            strings[0][7] = "IMDB";
             for(int i = 1; i <myData.size()+1;i++){
                 for(int j = 0; j < 8; j++){
                     switch (j) {
                         case 0:
-                            strings[i][j] = "" + myData.get(i-1).year_;
+                            strings[i][j] = "" + myData.get(i-1).title_;
                             break;
                         case 1:
-                            strings[i][j] = "" + myData.get(i-1).long_term_trend_;
+                            strings[i][j] = "" + myData.get(i-1).worldwide_gross_;
                             break;
                         case 2:
-                            strings[i][j] = "" + myData.get(i-1).pedestrian_;
+                            strings[i][j] = "" + myData.get(i-1).production_budget_;
                             break;
                         case 3:
-                            strings[i][j] = "" + myData.get(i-1).pedal_cycle_;
+                            strings[i][j] = "" + myData.get(i-1).year;
                             break;
                         case 4:
-                            strings[i][j] = "" + myData.get(i-1).powered_two_wheeler_;
+                            strings[i][j] = "" + myData.get(i-1).genre_;
                             break;
                         case 5:
-                            strings[i][j] = "" + myData.get(i-1).car_taxi_;
+                            strings[i][j] = "" + myData.get(i-1).directors_;
                             break;
                         case 6:
-                            strings[i][j] = "" + myData.get(i-1).bus_coach_;
+                            strings[i][j] = "" + myData.get(i-1).rotten_tomatoes_rating_;
                             break;
                         case 7:
-                            strings[i][j] = "" + myData.get(i-1).goods_other_;
+                            strings[i][j] = "" + myData.get(i-1).imdb_rating_;
                             break;
                     }
                 }
@@ -191,66 +188,96 @@ public class MainActivity extends AppCompatActivity {
 
     // returns the value of the given columns
     private String getCellAsString(Row row, int c, FormulaEvaluator formulaEvaluator){
-        String value = "";
+        // this is the standard string if the cells are empty
+        String value = "-";
         try{
             // in the given row access column c
             Cell cell = row.getCell(c);
-            CellValue cellValue = formulaEvaluator.evaluate(cell);
 
-            // boolean value in cell
-            if(cellValue.getCellType() == CELL_TYPE_BOOLEAN){
-                value = ""+cellValue.getBooleanValue();
-            }
-            // numeric value in cell
-            else if(cellValue.getCellType() == CELL_TYPE_NUMERIC){
-                int numericValue = (int) cellValue.getNumberValue();
-                // date format recognized in cell
-                if(HSSFDateUtil.isCellDateFormatted(cell)) {
-                    SimpleDateFormat format = new SimpleDateFormat("dd/MM/yy");
-                    value = format.format(HSSFDateUtil.getJavaDate(numericValue));
+            // check if cell is blank
+            if(cell != null) {
+                CellValue cellValue = formulaEvaluator.evaluate(cell);
+
+                // boolean value in cell
+                if (cellValue.getCellType() == CELL_TYPE_BOOLEAN) {
+                    value = "" + cellValue.getBooleanValue();
                 }
-                else{
-                    value = ""+numericValue;
+
+                // numeric value in cell
+                else if (cellValue.getCellType() == CELL_TYPE_NUMERIC) {
+                    Float numericValue = (float) cellValue.getNumberValue();
+                    // date format recognized in cell
+                    if (HSSFDateUtil.isCellDateFormatted(cell)) {
+                        SimpleDateFormat format = new SimpleDateFormat("dd/MM/yy");
+                        value = format.format(HSSFDateUtil.getJavaDate(numericValue));
+                    } else {
+                        value = "" + numericValue;
+                    }
                 }
-            }
-            // string in cell
-            else if(cellValue.getCellType() == CELL_TYPE_STRING){
-                value = ""+cellValue.getStringValue();
+
+                // string in cell
+                else if (cellValue.getCellType() == CELL_TYPE_STRING) {
+                    value = "" + cellValue.getStringValue();
+                }
             }
         }
         catch (NullPointerException e){
             Log.e(TAG, "getCellAsString: NullPointerException: "+e.getMessage());
         }
+        //Log.i(TAG, "Value: "+value);
         return value;
     }
 
     // split data and add it to the list
     public void parseStringBuilder(StringBuilder stringBuilder){
-        String[] rows = stringBuilder.toString().split(",");
+        String[] rows = stringBuilder.toString().split("§");
+        try {
+            if (rows.length > 1){
+                for (int i = 0; i < rows.length; i += 8) {
+                    String title_ = rows[i];
 
-        // page 1, row 12 to 21, column 0 and 1
-        String year_;
-        int long_term_trend_;
+                    int worldwide_gross_ = 0;
+                    if(rows[i+1]!="-"){
+                        worldwide_gross_ = (int)Float.parseFloat(rows[i+1]);
+                    }
 
-        // page 2, row 2 to 11, column 1 2 3 4 5 6
-        int pedestrian_;
-        int pedal_cycle_;
-        int powered_two_wheeler_;
-        int car_taxi_;
-        int bus_coach_;
-        int goods_other_;
-        try{
-            for(int i = 0; i < rows.length; i+=8){
-                year_ = rows[i];
-                long_term_trend_ = Integer.parseInt(rows[i+1]);
-                pedestrian_ = Integer.parseInt(rows[i+2]);
-                pedal_cycle_ = Integer.parseInt(rows[i+3]);
-                powered_two_wheeler_ = Integer.parseInt(rows[i+4]);
-                car_taxi_ = Integer.parseInt(rows[i+5]);
-                bus_coach_ = Integer.parseInt(rows[i+6]);
-                goods_other_ = Integer.parseInt(rows[i+7]);
-                KSI k = new KSI(year_,long_term_trend_,pedestrian_,pedal_cycle_,powered_two_wheeler_,car_taxi_,bus_coach_,goods_other_);
-                myData.add(k);
+                    int production_budget_ = 0;
+                    if(rows[i+2]!="-"){
+                        production_budget_ = (int)Float.parseFloat(rows[i+2]);
+                    }
+
+                    int release_date_ = 0;
+                    if(rows[i+3]!="-"){
+                        release_date_ = (int)Float.parseFloat(rows[i + 3]);
+                    }
+
+                    String genre_ = "Undefined";
+                    if(rows[i+4]!="-"){
+                        genre_ = rows[i+4];
+                    }
+
+                    String directors_ = "Unknown";
+                    if(rows[i+5]!="-"){
+                        directors_ = rows[i+5];
+                    }
+
+                    int rotten_tomatoes_rating_ = 0 ;
+                    if(rows[i+6]!="-"){
+                        rotten_tomatoes_rating_ = (int)Float.parseFloat(rows[i+6]);
+                    }
+
+                    float imdb_rating_ = 0;
+                    if(rows[i+7]!="-"){
+                        imdb_rating_ = Float.parseFloat(rows[i+7]);
+                    }
+
+                    //Log.i(TAG, "Title: "+title_+", Ww. Gross: "+worldwide_gross_+", Budget: "+production_budget_+", Released: "+release_date_+", Genre: "+genre_+", Directors: "+directors_);
+                    Movie k = new Movie(title_, worldwide_gross_, production_budget_, release_date_, genre_, directors_, rotten_tomatoes_rating_, imdb_rating_);
+                    myData.add(k);
+                }
+            }
+            else{
+                Log.i(TAG, "No entries in the Stringbuilder");
             }
         }
         catch (NumberFormatException e){
@@ -314,9 +341,20 @@ public class MainActivity extends AppCompatActivity {
         if(!selection1.isEmpty()&&!selection2.isEmpty()){
             // make data visually comparable
             Toast.makeText(MainActivity.this, "Comparison started", Toast.LENGTH_SHORT).show();
+           /* String[][] strings = new String[selection1.size()][3];
+            for(int i = 0; i < strings.length; i++){
+                for(int j = 0; j <strings[0].length; j++){
+                    if
+                }
+            }*/
         }
+        // this functions like a reset tool, turning the table back to normal
         else{
             Toast.makeText(MainActivity.this, "Please select 2 columns to compare", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    public void pivot(String s){
+
     }
 }
