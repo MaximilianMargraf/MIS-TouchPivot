@@ -31,7 +31,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import static org.apache.poi.ss.usermodel.Cell.CELL_TYPE_BOOLEAN;
 import static org.apache.poi.ss.usermodel.Cell.CELL_TYPE_NUMERIC;
@@ -43,16 +47,11 @@ public class MainActivity extends AppCompatActivity {
 
     //Table that will include all our data for KIS
     List<Movie> myData = new ArrayList<>();
+    List<PerYear> myData2 = new ArrayList<>();
     Context context = this;
     TextView cm1;
-    TextView cm2;
     TableLayout table;
-    Button compare;
-    int last_row = 300;
-
-    // lists with values from selected columns, the 0st entry is the name of the column
-    List<String> selection1 = new ArrayList<>();
-    List<String> selection2 = new ArrayList<>();
+    int last_row = 100;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,28 +63,14 @@ public class MainActivity extends AppCompatActivity {
         // link design elements
         table = (TableLayout)findViewById(R.id.table_main);
         cm1 = (TextView)findViewById(R.id.textView);
-        cm2 = (TextView)findViewById(R.id.textView2);
-        compare = (Button)findViewById(R.id.button);
 
         // check for storage permissions (I think this became obsolete)
         checkPermission();
-
-        // call compare function when compare button is clicked
-        compare.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                compare();
-            }
-        });
 
         // read in table from URL with Async Task
         // the data comes from here_ https://www.tableau.com/sites/default/files/pages/movies.xlsx
         MovieReader movieReader = new MovieReader();
         movieReader.execute();
-    }
-
-    public Context getContext(){
-        return context;
     }
 
     // android version of level <= 26
@@ -143,46 +128,20 @@ public class MainActivity extends AppCompatActivity {
         // called on main thread after async task is done
         @Override
         protected void onPostExecute(Context context){
-            String[][] strings = new String[last_row][8];
-            strings[0][0] = "Title";
-            strings[0][1] = "Ww. Gross";
-            strings[0][2] = "Budget";
-            strings[0][3] = "Released";
-            strings[0][4] = "Genre";
-            strings[0][5] = "Director";
-            strings[0][6] = "Rotten Tomatoes";
-            strings[0][7] = "IMDB";
-            for(int i = 1; i <myData.size()+1;i++){
-                for(int j = 0; j < 8; j++){
-                    switch (j) {
-                        case 0:
-                            strings[i][j] = "" + myData.get(i-1).title_;
-                            break;
-                        case 1:
-                            strings[i][j] = "" + myData.get(i-1).worldwide_gross_;
-                            break;
-                        case 2:
-                            strings[i][j] = "" + myData.get(i-1).production_budget_;
-                            break;
-                        case 3:
-                            strings[i][j] = "" + myData.get(i-1).year;
-                            break;
-                        case 4:
-                            strings[i][j] = "" + myData.get(i-1).genre_;
-                            break;
-                        case 5:
-                            strings[i][j] = "" + myData.get(i-1).directors_;
-                            break;
-                        case 6:
-                            strings[i][j] = "" + myData.get(i-1).rotten_tomatoes_rating_;
-                            break;
-                        case 7:
-                            strings[i][j] = "" + myData.get(i-1).imdb_rating_;
-                            break;
+            String[][] strings = initMovieArray(myData);
+            initTable(strings);
+            Log.i(TAG, "initialized default table");
+
+            // prepare the other data for pivoting
+            for(int i = 1905; i < 2024; i++){
+                // check if the year exists in the Dataset
+                for(int j = 0; j <myData.size(); j++){
+                    if(myData.get(j).year == i){
+                        myData2.add(new PerYear(i, myData));
+                        break;
                     }
                 }
             }
-            initTable(strings);
         }
     }
 
@@ -303,29 +262,12 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View view) {
                         int id = txt.getId();
-                        // case: no selection yet
-                        if(cm1.getText()=="" && cm2.getText()==""){
-                            cm1.setText(strings[0][id]);
-                            for(int k = 0; k < strings.length; k++){
-                                selection1.add(strings[k][id]);
-                            }
-                        }
-                        // case: first selection happened already
-                        else if(cm1.getText()!="" && cm2.getText()==""){
-                            cm2.setText(strings[0][id]);
-                            for(int k = 0; k < strings.length; k++){
-                                selection2.add(strings[k][id]);
-                            }
-                        }
-                        // case: both selections already done, reset and fill first selection list
-                        else if(cm1.getText()!="" && cm2.getText()!=""){
-                            cm1.setText(strings[0][id]);
-                            cm2.setText("");
-                            selection1.clear();
-                            selection2.clear();
-                            for(int k = 0; k < strings.length; k++){
-                                selection1.add(strings[k][id]);
-                            }
+                        Toast.makeText(MainActivity.this, "Column: "+id, Toast.LENGTH_SHORT).show();
+                        // remove all other views
+                        table.removeAllViews();
+                        if(id == 3){
+                            String[][] strings = initPerYearArray(myData2);
+                            initTable(strings);
                         }
                     }
                 });
@@ -336,25 +278,100 @@ public class MainActivity extends AppCompatActivity {
         Log.i(TAG, "Initialised table");
     }
 
-    // when 2 columns are selected, compare them with button click
-    public void compare(){
-        if(!selection1.isEmpty()&&!selection2.isEmpty()){
-            // make data visually comparable
-            Toast.makeText(MainActivity.this, "Comparison started", Toast.LENGTH_SHORT).show();
-           /* String[][] strings = new String[selection1.size()][3];
-            for(int i = 0; i < strings.length; i++){
-                for(int j = 0; j <strings[0].length; j++){
-                    if
+    public String[][] initMovieArray(List<Movie> l){
+        int length = l.size();
+        String[][] strings = new String[length+1][8];
+        strings[0][0] = "Title";
+        strings[0][1] = "Ww. Gross";
+        strings[0][2] = "Budget";
+        strings[0][3] = "Released";
+        strings[0][4] = "Genre";
+        strings[0][5] = "Director";
+        strings[0][6] = "Rotten Tomatoes";
+        strings[0][7] = "IMDB";
+        for(int i = 1; i <l.size()+1;i++){
+            for(int j = 0; j < 8; j++){
+                switch (j) {
+                    case 0:
+                        strings[i][j] = "" + l.get(i-1).title_;
+                        break;
+                    case 1:
+                        strings[i][j] = "" + l.get(i-1).worldwide_gross_;
+                        break;
+                    case 2:
+                        strings[i][j] = "" + l.get(i-1).production_budget_;
+                        break;
+                    case 3:
+                        strings[i][j] = "" + l.get(i-1).year;
+                        break;
+                    case 4:
+                        strings[i][j] = "" + l.get(i-1).genre_;
+                        break;
+                    case 5:
+                        strings[i][j] = "" + l.get(i-1).directors_;
+                        break;
+                    case 6:
+                        strings[i][j] = "" + l.get(i-1).rotten_tomatoes_rating_;
+                        break;
+                    case 7:
+                        strings[i][j] = "" + l.get(i-1).imdb_rating_;
+                        break;
                 }
-            }*/
+            }
         }
-        // this functions like a reset tool, turning the table back to normal
-        else{
-            Toast.makeText(MainActivity.this, "Please select 2 columns to compare", Toast.LENGTH_SHORT).show();
-        }
+        return strings;
     }
 
-    public void pivot(String s){
+    public String[][] initPerYearArray(List<PerYear> l){
+        int length = l.size();
+        String[][] strings = new String[length+1][8];
+        strings[0][0] = "Year";
+        strings[0][1] = "Gross";
+        strings[0][2] = "Budget";
+        strings[0][3] = "Movies";
+        strings[0][4] = "Dom. genre";
+        strings[0][5] = "Avg. RT";
+        strings[0][6] = "Avg. IMDB";
+        strings[0][7] = "B. movie of the year";
+        for(int i = 1; i <l.size()+1;i++){
+            for(int j = 0; j < 8; j++){
+                switch (j) {
+                    case 0:
+                        strings[i][j] = "" + l.get(i-1).year_;
+                        break;
+                    case 1:
+                        strings[i][j] = "" + l.get(i-1).grossedPerYear_;
+                        break;
+                    case 2:
+                        strings[i][j] = "" + l.get(i-1).budgetPerYear_;
+                        break;
+                    case 3:
+                        strings[i][j] = "" + l.get(i-1).moviesPerYear_;
+                        break;
+                    case 4:
+                        strings[i][j] = "" + l.get(i-1).mostCommonGenre_;
+                        break;
+                    case 5:
+                        strings[i][j] = "" + l.get(i-1).averageTomatoeScore_;
+                        break;
+                    case 6:
+                        strings[i][j] = "" + l.get(i-1).averageIMDBScore_;
+                        break;
+                    case 7:
+                        strings[i][j] = "" + l.get(i-1).IMDBbestMovie_;
+                        break;
+                }
+            }
+        }
+        print(strings);
+        return strings;
+    }
 
+    public void print(String[][] s){
+        for(int i = 0; i < s.length; i++){
+            for(int j = 0; j < s[0].length; j++){
+                Log.i(TAG, "i.j: "+s[i][j]);
+            }
+        }
     }
 }
