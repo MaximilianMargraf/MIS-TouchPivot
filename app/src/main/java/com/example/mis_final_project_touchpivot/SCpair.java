@@ -1,14 +1,12 @@
 package com.example.mis_final_project_touchpivot;
 
 import android.content.Context;
+import android.widget.TableLayout;
 
 public class SCpair {
-    String string_;
-    Context context;
-
     public SCpair(String string_, Context context) {
         this.string_ = string_;
-        this.context = context;
+        this.context_ = context;
     }
 
     public String getString_() {
@@ -16,6 +14,9 @@ public class SCpair {
     }
 
     public Context getContext() {
-        return context;
+        return context_;
     }
+
+    String string_;
+    Context context_;
 }

@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">MIS-final-project-TouchPivot</string>
+    <string name="active_column1">active column 1</string>
+    <string name="active_column2">active column 2</string>
+    <string name="selection">Selection:</string>
+    <string name="compare">Compare</string>
 </resources>
