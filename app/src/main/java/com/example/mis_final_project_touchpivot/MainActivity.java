@@ -313,6 +313,9 @@ public class MainActivity extends AppCompatActivity {
             // fill the Textviews of the different
             for(int j = 0; j < strings[0].length; j++){
                 final TextView txt = new TextView(this);
+                if(i==0){
+                    txt.setTypeface(null, Typeface.BOLD);
+                }
                 txt.setTextSize(18);
                 txt.setText(strings[i][j]);
                 txt.setId(j);
