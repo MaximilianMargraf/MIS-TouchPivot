@@ -570,12 +570,6 @@ public class MainActivity extends AppCompatActivity {
     public void moviesPerDirector(PieChart p){
         p.setVisibility(View.VISIBLE);
         // total amount of movies
-        int movies = 0;
-        for(PerDirector d : myData4){
-            if(d.movies_director_>=2){
-                movies += d.movies_director_;
-            }
-        }
         List<PieEntry> entries = new ArrayList<>();
         for(PerDirector d : myData4){
             if(d.movies_director_>=2){
@@ -608,7 +602,7 @@ public class MainActivity extends AppCompatActivity {
         //prep entries
         List<Entry> entries1 = new ArrayList<>();
         for (PerYear perYear : myData2) {
-            entries1.add(new Entry(perYear.year_, perYear.averageIMDBScore_));
+            entries1.add(new Entry(perYear.year_, perYear.averageIMDBScore_*10));
         }
         List<Entry> entries2 = new ArrayList<>();
         for (PerYear perYear : myData2) {

@@ -14,6 +14,7 @@ public class PerYear {
     float averageTomatoeScore_ = 0;
     float averageIMDBScore_ = 0;
     String IMDBbestMovie_ = "Unknown";
+    Map<String, Integer> genres_amount = new HashMap<>();
 
     public PerYear(int year_, List<Movie> movies) {
         this.year_ = year_;
@@ -54,6 +55,7 @@ public class PerYear {
             Integer j = hm.get(i);
             hm.put(i, (j == null) ? 1 : j + 1);
         }
+        this.genres_amount = hm;
 
         String genre = "Unknown";
         int most_common = 0;
