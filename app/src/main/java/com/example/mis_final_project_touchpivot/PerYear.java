@@ -15,14 +15,14 @@ public class PerYear {
     float averageIMDBScore_ = 0;
     String IMDBbestMovie_ = "Unknown";
 
-    public PerYear(int year_, List<Movie> movies_) {
+    public PerYear(int year_, List<Movie> movies) {
         this.year_ = year_;
 
         // add all movies with specific year to temporary list
         List<Movie> tmp = new ArrayList<>();
-        for(int i = 0; i < movies_.size(); i++){
-            if(this.year_ == movies_.get(i).year){
-                tmp.add(movies_.get(i));
+        for(int i = 0; i < movies.size(); i++){
+            if(this.year_ == movies.get(i).year){
+                tmp.add(movies.get(i));
             }
         }
 
@@ -46,6 +46,7 @@ public class PerYear {
 
         this.averageIMDBScore_ = this.averageIMDBScore_/this.moviesPerYear_;
         this.averageIMDBScore_ = (float)((int)(this.averageIMDBScore_*100f))/100f;
+
         // https://www.geeksforgeeks.org/count-occurrences-elements-list-java/
         // find most common genre
         Map<String, Integer> hm = new HashMap<String, Integer>();

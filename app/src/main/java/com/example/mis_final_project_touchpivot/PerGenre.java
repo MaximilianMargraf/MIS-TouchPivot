@@ -18,10 +18,8 @@ public class PerGenre {
         // add all movies with specific genre to temporary list
         List<Movie> tmp = new ArrayList<>();
         for(int i = 0; i < movies.size(); i++){
-            //System.out.println("Genre: "+genre_+", Found genre: "+movies.get(i).genre_);
             if(this.genre_ .equals(movies.get(i).genre_)){
                 tmp.add(movies.get(i));
-                //System.out.println("Added movie "+movies.get(i).title_+" to tmp list");
             }
         }
 

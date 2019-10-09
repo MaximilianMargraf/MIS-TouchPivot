@@ -1,7 +1,9 @@
 package com.example.mis_final_project_touchpivot;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Utility {
     public String[][] initMovieArray(List<Movie> l){
@@ -133,6 +135,50 @@ public class Utility {
         return strings;
     }
 
+    public String[][] initPerDirectorArray(List<PerDirector> l){
+        int length = l.size();
+        String[][] strings = new String[length+1][8];
+        strings[0][0] = "Director";
+        strings[0][1] = "Gross";
+        strings[0][2] = "Budget";
+        strings[0][3] = "Movies";
+        strings[0][4] = "Avg. RT";
+        strings[0][5] = "Avg. Imdb";
+        strings[0][6] = "Fav. genre";
+        strings[0][7] = "Best movie";
+        for(int i = 1; i <l.size()+1;i++){
+            for(int j = 0; j < 8; j++){
+                switch (j) {
+                    case 0:
+                        strings[i][j] = "" + l.get(i-1).name_;
+                        break;
+                    case 1:
+                        strings[i][j] = "" + l.get(i-1).gross_director_;
+                        break;
+                    case 2:
+                        strings[i][j] = "" + l.get(i-1).budget_director_;
+                        break;
+                    case 3:
+                        strings[i][j] = "" + l.get(i-1).movies_director_;
+                        break;
+                    case 4:
+                        strings[i][j] = "" + l.get(i-1).avg_rt_rating_;
+                        break;
+                    case 5:
+                        strings[i][j] = "" + l.get(i-1).avg_imdb_rating_;
+                        break;
+                    case 6:
+                        strings[i][j] = "" + l.get(i-1).favorite_genre_;
+                        break;
+                    case 7:
+                        strings[i][j] = "" + l.get(i-1).best_movie_;
+                        break;
+                }
+            }
+        }
+        return strings;
+    }
+
     public void print(String[][] s){
         for(int i = 0; i < s.length; i++){
             for(int j = 0; j < s[0].length; j++){
@@ -156,9 +202,26 @@ public class Utility {
         l.add("Romantic Comedy");
         l.add("Romantic Drama");
         l.add("Thriller/Suspense");
-        l.add("Undefined");
         l.add("Western");
         return l;
     }
 
+    public List<String> initDirectors(List<Movie> s){
+        List<String> directors = new ArrayList<>();
+        for(Movie m : s){
+            directors.add(m.directors_);
+        }
+
+        Map<String, Integer> hm = new HashMap<String, Integer>();
+        for (String i : directors) {
+            Integer j = hm.get(i);
+            hm.put(i, (j == null) ? 1 : j + 1);
+        }
+
+        List<String> l = new ArrayList<>();
+        for(Map.Entry<String, Integer> pair : hm.entrySet()){
+            l.add(pair.getKey());
+        }
+        return l;
+    }
 }
