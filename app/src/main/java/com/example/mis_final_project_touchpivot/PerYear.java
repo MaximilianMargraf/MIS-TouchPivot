@@ -33,15 +33,14 @@ public class PerYear {
         for(int i = 0; i <tmp.size(); i++){
             this.grossedPerYear_ += tmp.get(i).worldwide_gross_;
             this.budgetPerYear_ += tmp.get(i).production_budget_;
-            this.moviesPerYear_ = tmp.size();
             this.averageTomatoeScore_ += tmp.get(i).rotten_tomatoes_rating_;
             this.averageIMDBScore_ += tmp.get(i).imdb_rating_;
             genres.add(tmp.get(i).genre_);
-
             if(tmp.get(i).imdb_rating_ > top_rated.imdb_rating_){
                 top_rated = tmp.get(i);
             }
         }
+        this.moviesPerYear_ = tmp.size();
         this.averageTomatoeScore_ = this.averageTomatoeScore_/this.moviesPerYear_;
         this.averageTomatoeScore_ = (float)((int)(this.averageTomatoeScore_*100f))/100f;
 

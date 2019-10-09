@@ -11,10 +11,23 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.github.mikephil.charting.charts.BarChart;
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.charts.PieChart;
+import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.BarData;
+import com.github.mikephil.charting.data.BarDataSet;
+import com.github.mikephil.charting.data.BarEntry;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 
 import org.apache.poi.hssf.usermodel.HSSFDateUtil;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
@@ -48,11 +61,17 @@ public class MainActivity extends AppCompatActivity {
     //Table that will include all our data for KIS
     List<Movie> myData = new ArrayList<>();
     List<PerYear> myData2 = new ArrayList<>();
+    List<PerGenre> myData3 = new ArrayList<>();
     Context context = this;
     TextView cm1;
     Button back;
     TableLayout table;
-    int last_row = 200;
+    int last_row = 101;
+    Utility util = new Utility();
+    RelativeLayout r1, r2;
+    LineChart lineChart1, lineChart2;
+    BarChart barChart1, barChart2;
+    PieChart pieChart1, pieChart2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,19 +84,34 @@ public class MainActivity extends AppCompatActivity {
         table = (TableLayout)findViewById(R.id.table_main);
         cm1 = (TextView)findViewById(R.id.textView);
         back = (Button)findViewById(R.id.button);
+        r1 = (RelativeLayout)findViewById(R.id.relativeLayout_top);
+        r2 = (RelativeLayout)findViewById(R.id.relativeLayout_bottom);
+
+        lineChart1 = (LineChart)findViewById(R.id.lineChart1);
+        lineChart2 = (LineChart)findViewById(R.id.lineChart2);
+
+        barChart1 = (BarChart)findViewById(R.id.barChart1);
+        barChart2 = (BarChart)findViewById(R.id.barChart2);
+
+        pieChart1 = (PieChart)findViewById(R.id.pieChart1);
+        pieChart2 = (PieChart)findViewById(R.id.pieChart2);
+        initChart();
 
         // check for storage permissions (I think this became obsolete)
-        checkPermission();
+        //checkPermission();
+
+
 
         back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 new MovieReader().execute();
+                cm1.setText("Title");
             }
         });
 
         // read in table from URL with Async Task
-        // the data comes from here_ https://www.tableau.com/sites/default/files/pages/movies.xlsx
+        // the data comes from here https://www.tableau.com/sites/default/files/pages/movies.xlsx
         MovieReader movieReader = new MovieReader();
         movieReader.execute();
     }
@@ -99,34 +133,33 @@ public class MainActivity extends AppCompatActivity {
 
     // https://developer.android.com/reference/android/os/AsyncTask
     // tasks like this need to be done in a separate thread!
-    private class MovieReader extends AsyncTask<SCpair, Integer, Context> {
+    private class MovieReader extends AsyncTask<Void, Integer, Context> {
         @Override
-        protected Context doInBackground(SCpair... url_){
+        protected Context doInBackground(Void... voids){
             try{
-                // reset table
-                //table.removeAllViews();
-
                 // Get to the xls file in assets
-                AssetManager am = MainActivity.this.getAssets();
-                InputStream is = am.open("movies.xls");
+                if(myData.size()==0) {
+                    AssetManager am = MainActivity.this.getAssets();
+                    InputStream is = am.open("movies.xls");
 
-                // create an HSSf workbook
-                HSSFWorkbook workbook = new HSSFWorkbook(is);
-                FormulaEvaluator formulaEvaluator = workbook.getCreationHelper().createFormulaEvaluator();
-                Log.i(TAG, "HSSF workbook created");
+                    // create an HSSf workbook
+                    HSSFWorkbook workbook = new HSSFWorkbook(is);
+                    FormulaEvaluator formulaEvaluator = workbook.getCreationHelper().createFormulaEvaluator();
+                    Log.i(TAG, "HSSF workbook created");
 
-                HSSFSheet sheet = workbook.getSheetAt(0);
-                StringBuilder sb = new StringBuilder();
+                    HSSFSheet sheet = workbook.getSheetAt(0);
+                    StringBuilder sb = new StringBuilder();
 
-                for(int i = 1; i < last_row; i++){
-                    Row row = sheet.getRow(i);
-                    for(int j = 0; j < 8; j++) {
-                        String value = getCellAsString(row, j, formulaEvaluator);
-                        sb.append(value + "§");
+                    for (int i = 1; i < last_row; i++) {
+                        Row row = sheet.getRow(i);
+                        for (int j = 0; j < 8; j++) {
+                            String value = getCellAsString(row, j, formulaEvaluator);
+                            sb.append(value + "§");
+                        }
                     }
+                    //Log.i(TAG, "String Builder done, on to parsing the string");
+                    parseStringBuilder(sb);
                 }
-                //Log.i(TAG, "String Builder done, on to parsing the string");
-                parseStringBuilder(sb);
             }
             catch (FileNotFoundException e) {
                 Log.e(TAG, "readExcelData: FileNotFoundException " + e.getMessage());
@@ -141,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Context context){
             table.removeAllViews();
-            String[][] strings = initMovieArray(myData);
+            String[][] strings = util.initMovieArray(myData);
             initTable(strings);
             Log.i(TAG, "initialized default table");
 
@@ -155,6 +188,14 @@ public class MainActivity extends AppCompatActivity {
                             break;
                         }
                     }
+                }
+            }
+
+            if(myData3.size()==0) {
+                List<String> genres = util.initGenres();
+                Log.i(TAG, "Genres size: " + genres.size());
+                for (int i = 0; i < genres.size(); i++) {
+                    myData3.add(new PerGenre(genres.get(i), myData));
                 }
             }
         }
@@ -209,43 +250,14 @@ public class MainActivity extends AppCompatActivity {
             if (rows.length > 1){
                 for (int i = 0; i < rows.length; i += 8) {
                     String title_ = rows[i];
+                    int worldwide_gross_  = (int)Float.parseFloat(rows[i+1]);
+                    int production_budget_  = (int)Float.parseFloat(rows[i+2]);
+                    int release_date_ = (int)Float.parseFloat(rows[i + 3]);
+                    String genre_ = rows[i+4];
+                    String directors_ = rows[i+5];
+                    int rotten_tomatoes_rating_ = (int)Float.parseFloat(rows[i+6]);
+                    float imdb_rating_ = Float.parseFloat(rows[i+7]);
 
-                    int worldwide_gross_ = 0;
-                    if(rows[i+1]!="-"){
-                        worldwide_gross_ = (int)Float.parseFloat(rows[i+1]);
-                    }
-
-                    int production_budget_ = 0;
-                    if(rows[i+2]!="-"){
-                        production_budget_ = (int)Float.parseFloat(rows[i+2]);
-                    }
-
-                    int release_date_ = 0;
-                    if(rows[i+3]!="-"){
-                        release_date_ = (int)Float.parseFloat(rows[i + 3]);
-                    }
-
-                    String genre_ = "Undefined";
-                    if(rows[i+4]!="-"){
-                        genre_ = rows[i+4];
-                    }
-
-                    String directors_ = "Unknown";
-                    if(rows[i+5]!="-"){
-                        directors_ = rows[i+5];
-                    }
-
-                    int rotten_tomatoes_rating_ = 0 ;
-                    if(rows[i+6]!="-"){
-                        rotten_tomatoes_rating_ = (int)Float.parseFloat(rows[i+6]);
-                    }
-
-                    float imdb_rating_ = 0;
-                    if(rows[i+7]!="-"){
-                        imdb_rating_ = Float.parseFloat(rows[i+7]);
-                    }
-
-                    //Log.i(TAG, "Title: "+title_+", Ww. Gross: "+worldwide_gross_+", Budget: "+production_budget_+", Released: "+release_date_+", Genre: "+genre_+", Directors: "+directors_);
                     Movie k = new Movie(title_, worldwide_gross_, production_budget_, release_date_, genre_, directors_, rotten_tomatoes_rating_, imdb_rating_);
                     myData.add(k);
                 }
@@ -279,8 +291,107 @@ public class MainActivity extends AppCompatActivity {
                     public void onClick(View view) {
                         int id = txt.getId();
                         cm1.setText(strings[0][id]);
-                        Toast.makeText(MainActivity.this, "Column: "+id, Toast.LENGTH_SHORT).show();
-                        // remove all other views
+
+                        // show movies per year in line chart
+                        if(strings[0][id].equals("Year")) {
+                            // if both views are not filled yet
+                            if ((lineChart1.getVisibility() == View.GONE && barChart1.getVisibility() == View.GONE
+                                    && pieChart1.getVisibility() == View.GONE) && (lineChart2.getVisibility() == View.GONE
+                                    && barChart2.getVisibility() == View.GONE && pieChart2.getVisibility() == View.GONE)) {
+
+                                lineChart1.setVisibility(View.VISIBLE);
+
+                                //prep entries
+                                List<Entry> entries = new ArrayList<>();
+                                for (PerYear perYear : myData2) {
+                                    entries.add(new Entry(perYear.year_, perYear.moviesPerYear_));
+                                }
+                                for (Entry e : entries) {
+                                    Log.i(TAG, "Key: " + e.getX() + ", Value: " + e.getY());
+                                }
+
+                                // make line chart with entries
+                                LineDataSet dataSet = new LineDataSet(entries, "Label");
+                                //dataSet.setAxisDependency(YAxis.AxisDependency.LEFT);
+
+                                LineData lineData = new LineData(dataSet);
+                                lineChart1.setData(lineData);
+                                lineChart1.invalidate(); // refresh
+                            }
+                            else if ((lineChart1.getVisibility() == View.VISIBLE || barChart1.getVisibility() == View.VISIBLE
+                                    || pieChart1.getVisibility() == View.VISIBLE) && (lineChart2.getVisibility() == View.GONE
+                                    && barChart2.getVisibility() == View.GONE && pieChart2.getVisibility() == View.GONE)) {
+
+                                lineChart2.setVisibility(View.VISIBLE);
+
+                                //prep entries
+                                List<Entry> entries = new ArrayList<>();
+                                for (PerYear perYear : myData2) {
+                                    entries.add(new Entry(perYear.year_, perYear.moviesPerYear_));
+                                }
+                                for (Entry e : entries) {
+                                    Log.i(TAG, "Key: " + e.getX() + ", Value: " + e.getY());
+                                }
+
+                                // make line chart with entries
+                                LineDataSet dataSet = new LineDataSet(entries, "Movies per year");
+                                //dataSet.setAxisDependency(YAxis.AxisDependency.LEFT);
+
+                                LineData lineData = new LineData(dataSet);
+                                lineChart2.setData(lineData);
+                                lineChart2.invalidate(); // refresh
+                            }
+                            // charts already filled
+                            else if ((lineChart1.getVisibility() == View.VISIBLE || barChart1.getVisibility() == View.VISIBLE
+                                    || pieChart1.getVisibility() == View.VISIBLE) && (lineChart2.getVisibility() == View.VISIBLE
+                                    || barChart2.getVisibility() == View.VISIBLE || pieChart2.getVisibility() == View.VISIBLE)) {
+                                clearCharts();
+                            }
+                        }
+                        // amount of movies per genre
+                        if(strings[0][id].equals("Genre")) {
+                            if ((lineChart1.getVisibility() == View.GONE && barChart1.getVisibility() == View.GONE
+                                    && pieChart1.getVisibility() == View.GONE) && (lineChart2.getVisibility() == View.GONE
+                                    && barChart2.getVisibility() == View.GONE && pieChart2.getVisibility() == View.GONE)) {
+
+                                barChart1.setVisibility(View.VISIBLE);
+
+                                List<BarEntry> entries = new ArrayList<>();
+                                for(int i = 0; i < myData3.size(); i++){
+                                    entries.add(new BarEntry(i, myData3.get(i).amount_movies_));
+                                }
+                                BarDataSet set = new BarDataSet(entries, "Movies per genre");
+
+                                BarData data = new BarData(set);
+                                data.setBarWidth(0.9f); // set custom bar width
+                                barChart1.setData(data);
+                                barChart1.setFitBars(true); // make the x-axis fit exactly all bars
+                                barChart1.invalidate(); // refresh
+                            }
+                            else if ((lineChart1.getVisibility() == View.VISIBLE || barChart1.getVisibility() == View.VISIBLE
+                                    || pieChart1.getVisibility() == View.VISIBLE) && (lineChart2.getVisibility() == View.GONE
+                                    && barChart2.getVisibility() == View.GONE && pieChart2.getVisibility() == View.GONE)) {
+
+                                barChart2.setVisibility(View.VISIBLE);
+
+                                List<BarEntry> entries = new ArrayList<>();
+                                for(int i = 0; i < myData3.size(); i++){
+                                    entries.add(new BarEntry(i, myData3.get(i).amount_movies_));
+                                }
+                                BarDataSet set = new BarDataSet(entries, "Movies per genre");
+
+                                BarData data = new BarData(set);
+                                data.setBarWidth(0.9f); // set custom bar width
+                                barChart2.setData(data);
+                                barChart2.setFitBars(true); // make the x-axis fit exactly all bars
+                                barChart2.invalidate(); // refresh
+                            }
+                            else if ((lineChart1.getVisibility() == View.VISIBLE || barChart1.getVisibility() == View.VISIBLE
+                                    || pieChart1.getVisibility() == View.VISIBLE) && (lineChart2.getVisibility() == View.VISIBLE
+                                    || barChart2.getVisibility() == View.VISIBLE || pieChart2.getVisibility() == View.VISIBLE)) {
+                                clearCharts();
+                            }
+                        }
                     }
                 });
 
@@ -288,11 +399,18 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public boolean onLongClick(View view){
                         int id = txt.getId();
-                        table.removeAllViews();
-                        // so far we can only pivot around the years
-                        if(id == 3){
-                            String[][] strings = initPerYearArray(myData2);
+                        if(strings[0][id].equals("Year")){
+                            table.removeAllViews();
+                            String[][] strings = util.initPerYearArray(myData2);
                             initTable(strings);
+                            cm1.setText("Year");
+
+                        }
+                        if(strings[0][id].equals("Genre")){
+                            table.removeAllViews();
+                            String[][] strings = util.initPerGenreArray(myData3);
+                            initTable(strings);
+                            cm1.setText("Genre");
                         }
                         return true;
                     }
@@ -303,101 +421,45 @@ public class MainActivity extends AppCompatActivity {
         }
         Log.i(TAG, "Initialised table");
     }
+    public void initChart(){
+        // enable scaling and dragging
+        lineChart1.setDragEnabled(true);
+        lineChart1.setScaleEnabled(true);
+        // force pinch zoom along both axis
+        lineChart1.setPinchZoom(true);
+        lineChart1.setVisibility(View.GONE);
 
-    public String[][] initMovieArray(List<Movie> l){
-        int length = l.size();
-        String[][] strings = new String[length+1][8];
-        strings[0][0] = "Title";
-        strings[0][1] = "Ww. Gross";
-        strings[0][2] = "Budget";
-        strings[0][3] = "Year";
-        strings[0][4] = "Genre";
-        strings[0][5] = "Director";
-        strings[0][6] = "RT";
-        strings[0][7] = "Imdb";
-        for(int i = 1; i <l.size()+1;i++){
-            for(int j = 0; j < 8; j++){
-                switch (j) {
-                    case 0:
-                        strings[i][j] = "" + l.get(i-1).title_;
-                        break;
-                    case 1:
-                        strings[i][j] = "" + l.get(i-1).worldwide_gross_;
-                        break;
-                    case 2:
-                        strings[i][j] = "" + l.get(i-1).production_budget_;
-                        break;
-                    case 3:
-                        strings[i][j] = "" + l.get(i-1).year;
-                        break;
-                    case 4:
-                        strings[i][j] = "" + l.get(i-1).genre_;
-                        break;
-                    case 5:
-                        strings[i][j] = "" + l.get(i-1).directors_;
-                        break;
-                    case 6:
-                        strings[i][j] = "" + l.get(i-1).rotten_tomatoes_rating_;
-                        break;
-                    case 7:
-                        strings[i][j] = "" + l.get(i-1).imdb_rating_;
-                        break;
-                }
-            }
-        }
-        return strings;
+        // enable scaling and dragging
+        lineChart2.setDragEnabled(true);
+        lineChart2.setScaleEnabled(true);
+        // force pinch zoom along both axis
+        lineChart2.setPinchZoom(true);
+        lineChart2.setVisibility(View.GONE);
+
+        barChart1.setVisibility(View.GONE);
+        barChart2.setVisibility(View.GONE);
+
+        pieChart1.setVisibility(View.GONE);
+        pieChart2.setVisibility(View.GONE);
     }
 
-    public String[][] initPerYearArray(List<PerYear> l){
-        int length = l.size();
-        String[][] strings = new String[length+1][8];
-        strings[0][0] = "Year";
-        strings[0][1] = "Gross";
-        strings[0][2] = "Budget";
-        strings[0][3] = "Movies";
-        strings[0][4] = "Dom. genre";
-        strings[0][5] = "Avg. RT";
-        strings[0][6] = "Avg. IMDB";
-        strings[0][7] = "B. movie of the year";
-        for(int i = 1; i <l.size()+1;i++){
-            for(int j = 0; j < 8; j++){
-                switch (j) {
-                    case 0:
-                        strings[i][j] = "" + l.get(i-1).year_;
-                        break;
-                    case 1:
-                        strings[i][j] = "" + l.get(i-1).grossedPerYear_;
-                        break;
-                    case 2:
-                        strings[i][j] = "" + l.get(i-1).budgetPerYear_;
-                        break;
-                    case 3:
-                        strings[i][j] = "" + l.get(i-1).moviesPerYear_;
-                        break;
-                    case 4:
-                        strings[i][j] = "" + l.get(i-1).mostCommonGenre_;
-                        break;
-                    case 5:
-                        strings[i][j] = "" + l.get(i-1).averageTomatoeScore_;
-                        break;
-                    case 6:
-                        strings[i][j] = "" + l.get(i-1).averageIMDBScore_;
-                        break;
-                    case 7:
-                        strings[i][j] = "" + l.get(i-1).IMDBbestMovie_;
-                        break;
-                }
-            }
-        }
-        print(strings);
-        return strings;
-    }
+    public void clearCharts(){
+        lineChart1.clear();
+        lineChart2.clear();
 
-    public void print(String[][] s){
-        for(int i = 0; i < s.length; i++){
-            for(int j = 0; j < s[0].length; j++){
-                Log.i(TAG, "i.j: "+s[i][j]);
-            }
-        }
+        barChart1.clear();
+        barChart2.clear();
+
+        pieChart1.clear();
+        pieChart2.clear();
+
+        lineChart1.setVisibility(View.GONE);
+        lineChart2.setVisibility(View.GONE);
+
+        barChart1.setVisibility(View.GONE);
+        barChart2.setVisibility(View.GONE);
+
+        pieChart1.setVisibility(View.GONE);
+        pieChart2.setVisibility(View.GONE);
     }
 }
