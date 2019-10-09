@@ -629,7 +629,7 @@ public class MainActivity extends AppCompatActivity {
         rightAxis.setAxisMinimum(0f);
 
         // make line chart with entries
-        LineDataSet dataSet1 = new LineDataSet(entries1, "Average IMDb score");
+        LineDataSet dataSet1 = new LineDataSet(entries1, "Average IMDb score (*10)");
         LineDataSet dataSet2 = new LineDataSet(entries2, "Average Rotten Tomatoes score");
 
         dataSet1.setColor(MY_COLORS[5]);
