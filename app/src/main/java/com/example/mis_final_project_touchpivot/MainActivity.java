@@ -385,6 +385,26 @@ public class MainActivity extends AppCompatActivity {
                                 clearCharts();
                             }
                         }
+                        // show rt imdb score over years
+                        if(strings[0][0].equals("Year") && (strings[0][id].equals("Avg. RT") || strings[0][id].equals("Avg. Imdb"))) {
+                            if ((lineChart1.getVisibility() == View.GONE && barChart1.getVisibility() == View.GONE
+                                    && pieChart1.getVisibility() == View.GONE) && (lineChart2.getVisibility() == View.GONE
+                                    && barChart2.getVisibility() == View.GONE && pieChart2.getVisibility() == View.GONE)) {
+
+                                imdb_rt_score_years(lineChart1);
+                            }
+                            else if ((lineChart1.getVisibility() == View.VISIBLE || barChart1.getVisibility() == View.VISIBLE
+                                    || pieChart1.getVisibility() == View.VISIBLE) && (lineChart2.getVisibility() == View.GONE
+                                    && barChart2.getVisibility() == View.GONE && pieChart2.getVisibility() == View.GONE)) {
+
+                                imdb_rt_score_years(lineChart2);
+                            }
+                            else if ((lineChart1.getVisibility() == View.VISIBLE || barChart1.getVisibility() == View.VISIBLE
+                                    || pieChart1.getVisibility() == View.VISIBLE) && (lineChart2.getVisibility() == View.VISIBLE
+                                    || barChart2.getVisibility() == View.VISIBLE || pieChart2.getVisibility() == View.VISIBLE)) {
+                                clearCharts();
+                            }
+                        }
                     }
                 });
 
@@ -477,13 +497,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         XAxis xAxis = l.getXAxis();
-
-//        List<String> xAxisLabel = new ArrayList<>();
-//        for(int i = 1905; i<2022; i++) {
-//            xAxisLabel.add(""+i);
-//        }
-//        xAxis.setValueFormatter(new IndexAxisValueFormatter(xAxisLabel));
-//        l.getXAxis().setValueFormatter(new IndexAxisValueFormatter(xAxisLabel));
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setTypeface(tfLight);
         xAxis.setTextSize(10f);
@@ -491,7 +504,6 @@ public class MainActivity extends AppCompatActivity {
         xAxis.setLabelCount(entries.size());
         xAxis.setLabelCount(118);
         xAxis.setDrawGridLines(false);
-//        xAxis.setLabelCount(xAxisLabel.size(),true);
         xAxis.setLabelRotationAngle(-90);
 
         YAxis leftAxis = l.getAxisLeft();
@@ -585,5 +597,64 @@ public class MainActivity extends AppCompatActivity {
         set.setSliceSpace(0.8f);
 
         p.invalidate();
+    }
+
+    public void imdb_rt_score_years(LineChart l){
+        l.setVisibility(View.VISIBLE);
+        l.getDescription().setEnabled(false);
+        l.setDrawGridBackground(false);
+        l.getXAxis().setDrawAxisLine(false);
+
+        //prep entries
+        List<Entry> entries1 = new ArrayList<>();
+        for (PerYear perYear : myData2) {
+            entries1.add(new Entry(perYear.year_, perYear.averageIMDBScore_));
+        }
+        List<Entry> entries2 = new ArrayList<>();
+        for (PerYear perYear : myData2) {
+            entries2.add(new Entry(perYear.year_, perYear.averageTomatoeScore_));
+        }
+
+        XAxis xAxis = l.getXAxis();
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setTypeface(tfLight);
+        xAxis.setTextSize(10f);
+        xAxis.setTextColor(Color.BLACK);
+        xAxis.setLabelCount(entries1.size());
+        xAxis.setLabelCount(118);
+        xAxis.setDrawGridLines(false);
+        xAxis.setLabelRotationAngle(-90);
+
+        YAxis leftAxis = l.getAxisLeft();
+        leftAxis.setLabelCount(5, false);
+        leftAxis.setAxisMinimum(0f);
+
+        YAxis rightAxis = l.getAxisRight();
+        rightAxis.setLabelCount(5, false);
+        rightAxis.setDrawGridLines(false);
+        rightAxis.setAxisMinimum(0f);
+
+        // make line chart with entries
+        LineDataSet dataSet1 = new LineDataSet(entries1, "Average IMDb score");
+        LineDataSet dataSet2 = new LineDataSet(entries2, "Average Rotten Tomatoes score");
+
+        dataSet1.setColor(MY_COLORS[5]);
+        dataSet1.setCircleColor(MY_COLORS[0]);
+        dataSet1.setCircleRadius(1.5f);
+        dataSet1.setValueTextSize(8f);
+
+        dataSet2.setColor(MY_COLORS[4]);
+        dataSet2.setCircleColor(MY_COLORS[1]);
+        dataSet2.setCircleRadius(1.5f);
+        dataSet2.setValueTextSize(8f);
+
+        List<ILineDataSet> datas = new ArrayList<>();
+        datas.add(dataSet1);
+        datas.add(dataSet2);
+
+        LineData lineData = new LineData(datas);
+        l.setData(lineData);
+        l.animateY(100);
+        l.invalidate(); // refresh
     }
 }
