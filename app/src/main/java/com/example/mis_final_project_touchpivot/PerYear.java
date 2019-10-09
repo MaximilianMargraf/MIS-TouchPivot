@@ -43,8 +43,10 @@ public class PerYear {
             }
         }
         this.averageTomatoeScore_ = this.averageTomatoeScore_/this.moviesPerYear_;
-        this.averageIMDBScore_ = this.averageIMDBScore_/this.moviesPerYear_;
+        this.averageTomatoeScore_ = (float)((int)(this.averageTomatoeScore_*100f))/100f;
 
+        this.averageIMDBScore_ = this.averageIMDBScore_/this.moviesPerYear_;
+        this.averageIMDBScore_ = (float)((int)(this.averageIMDBScore_*100f))/100f;
         // https://www.geeksforgeeks.org/count-occurrences-elements-list-java/
         // find most common genre
         Map<String, Integer> hm = new HashMap<String, Integer>();

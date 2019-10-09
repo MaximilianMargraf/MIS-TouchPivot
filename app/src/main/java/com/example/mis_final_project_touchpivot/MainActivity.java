@@ -50,8 +50,9 @@ public class MainActivity extends AppCompatActivity {
     List<PerYear> myData2 = new ArrayList<>();
     Context context = this;
     TextView cm1;
+    Button back;
     TableLayout table;
-    int last_row = 100;
+    int last_row = 200;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,9 +64,17 @@ public class MainActivity extends AppCompatActivity {
         // link design elements
         table = (TableLayout)findViewById(R.id.table_main);
         cm1 = (TextView)findViewById(R.id.textView);
+        back = (Button)findViewById(R.id.button);
 
         // check for storage permissions (I think this became obsolete)
         checkPermission();
+
+        back.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                new MovieReader().execute();
+            }
+        });
 
         // read in table from URL with Async Task
         // the data comes from here_ https://www.tableau.com/sites/default/files/pages/movies.xlsx
@@ -94,6 +103,9 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected Context doInBackground(SCpair... url_){
             try{
+                // reset table
+                //table.removeAllViews();
+
                 // Get to the xls file in assets
                 AssetManager am = MainActivity.this.getAssets();
                 InputStream is = am.open("movies.xls");
@@ -128,17 +140,20 @@ public class MainActivity extends AppCompatActivity {
         // called on main thread after async task is done
         @Override
         protected void onPostExecute(Context context){
+            table.removeAllViews();
             String[][] strings = initMovieArray(myData);
             initTable(strings);
             Log.i(TAG, "initialized default table");
 
-            // prepare the other data for pivoting
-            for(int i = 1905; i < 2024; i++){
-                // check if the year exists in the Dataset
-                for(int j = 0; j <myData.size(); j++){
-                    if(myData.get(j).year == i){
-                        myData2.add(new PerYear(i, myData));
-                        break;
+            // prepare the other data for pivoting, only do this once though, not more often
+            if(myData2.size()==0) {
+                for (int i = 1905; i < 2024; i++) {
+                    // check if the year exists in the Dataset
+                    for (int j = 0; j < myData.size(); j++) {
+                        if (myData.get(j).year == i) {
+                            myData2.add(new PerYear(i, myData));
+                            break;
+                        }
                     }
                 }
             }
@@ -257,18 +272,29 @@ public class MainActivity extends AppCompatActivity {
                 txt.setTextSize(18);
                 txt.setText(strings[i][j]);
                 txt.setId(j);
+                txt.setPadding(5,2,5,2);
                 // On click listener for columns
                 txt.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         int id = txt.getId();
+                        cm1.setText(strings[0][id]);
                         Toast.makeText(MainActivity.this, "Column: "+id, Toast.LENGTH_SHORT).show();
                         // remove all other views
+                    }
+                });
+
+                txt.setOnLongClickListener(new View.OnLongClickListener(){
+                    @Override
+                    public boolean onLongClick(View view){
+                        int id = txt.getId();
                         table.removeAllViews();
+                        // so far we can only pivot around the years
                         if(id == 3){
                             String[][] strings = initPerYearArray(myData2);
                             initTable(strings);
                         }
+                        return true;
                     }
                 });
                 tr.addView(txt);
@@ -284,11 +310,11 @@ public class MainActivity extends AppCompatActivity {
         strings[0][0] = "Title";
         strings[0][1] = "Ww. Gross";
         strings[0][2] = "Budget";
-        strings[0][3] = "Released";
+        strings[0][3] = "Year";
         strings[0][4] = "Genre";
         strings[0][5] = "Director";
-        strings[0][6] = "Rotten Tomatoes";
-        strings[0][7] = "IMDB";
+        strings[0][6] = "RT";
+        strings[0][7] = "Imdb";
         for(int i = 1; i <l.size()+1;i++){
             for(int j = 0; j < 8; j++){
                 switch (j) {
