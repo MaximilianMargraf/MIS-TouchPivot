@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.res.AssetManager;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
@@ -84,6 +85,21 @@ public class MainActivity extends AppCompatActivity {
     LineChart lineChart1, lineChart2;
     BarChart barChart1, barChart2;
     PieChart pieChart1, pieChart2;
+    protected Typeface tfLight;
+
+    final int[] MY_COLORS = { // Add Custom Color for chart
+            Color.rgb(255,0,68), // red 0
+            Color.rgb(255,145,0), // orange 1
+            Color.rgb(255,239,0), // yellow 2
+            Color.rgb(46,232,32), // green 3
+            Color.rgb(25,202,238), // blue 4
+            Color.rgb(184,37,213), // purple 5
+            Color.rgb(188,143,143), // rosy brown 6
+            Color.rgb(171,39,79), // 7
+            Color.rgb(0,0,204), // dark blue 8
+            Color.rgb(1,186,118), // 9
+            Color.rgb(0,206,209), // dark turquoise
+            Color.rgb(255,102,255)}; // highlight (pastel red) 10
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -455,29 +471,28 @@ public class MainActivity extends AppCompatActivity {
         l.getXAxis().setDrawAxisLine(false);
 
         //prep entries
-        List<Entry> entries = new ArrayList<>();
+        ArrayList<Entry> entries = new ArrayList<>();
         for (PerYear perYear : myData2) {
             entries.add(new Entry(perYear.year_, perYear.moviesPerYear_));
         }
 
-        List<String> xAxisLabel = new ArrayList<>();
-        for(int i = 1905; i<2022; i++) {
-            xAxisLabel.add(""+i);
-        }
-
-        /*ValueFormatter formatter = new ValueFormatter() {
-            @Override
-            public String getAxisLabel(float value, AxisBase axis) {
-                return quarters[(int) value];
-            }
-        };*/
-
         XAxis xAxis = l.getXAxis();
-        xAxis.setValueFormatter(new IndexAxisValueFormatter(xAxisLabel));
+
+//        List<String> xAxisLabel = new ArrayList<>();
+//        for(int i = 1905; i<2022; i++) {
+//            xAxisLabel.add(""+i);
+//        }
+//        xAxis.setValueFormatter(new IndexAxisValueFormatter(xAxisLabel));
+//        l.getXAxis().setValueFormatter(new IndexAxisValueFormatter(xAxisLabel));
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setTypeface(tfLight);
+        xAxis.setTextSize(10f);
+        xAxis.setTextColor(Color.BLACK);
+        xAxis.setLabelCount(entries.size());
+        xAxis.setLabelCount(118);
         xAxis.setDrawGridLines(false);
-        xAxis.setLabelCount(xAxisLabel.size());
-        xAxis.setLabelRotationAngle(-45);
+//        xAxis.setLabelCount(xAxisLabel.size(),true);
+        xAxis.setLabelRotationAngle(-90);
 
         YAxis leftAxis = l.getAxisLeft();
         leftAxis.setLabelCount(5, false);
@@ -492,8 +507,15 @@ public class MainActivity extends AppCompatActivity {
         LineDataSet dataSet = new LineDataSet(entries, "Movies per Year");
         //dataSet.setAxisDependency(YAxis.AxisDependency.LEFT);
 
+        dataSet.setColor(MY_COLORS[5]);
+        dataSet.setCircleColor(MY_COLORS[0]);
+        dataSet.setCircleRadius(3.5f);
+        dataSet.setValueTextSize(8f);
+
         LineData lineData = new LineData(dataSet);
         l.setData(lineData);
+        l.animateY(100);
+
         l.invalidate(); // refresh
     }
 
@@ -510,7 +532,7 @@ public class MainActivity extends AppCompatActivity {
         }
         BarDataSet set = new BarDataSet(entries, "Movies per genre");
 
-        set.setColors(ColorTemplate.VORDIPLOM_COLORS);
+        set.setColors(MY_COLORS);
 
         BarData data = new BarData(set);
         data.setBarWidth(0.9f); // set custom bar width
@@ -526,7 +548,7 @@ public class MainActivity extends AppCompatActivity {
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setDrawGridLines(false);
         xAxis.setLabelCount(xAxisLabel.size());
-        xAxis.setLabelRotationAngle(-45);
+        xAxis.setLabelRotationAngle(-60);
 
         b.getAxisLeft().setDrawGridLines(false);
         b.animateY(100);
@@ -551,12 +573,17 @@ public class MainActivity extends AppCompatActivity {
         }
 
         PieDataSet set = new PieDataSet(entries, "Movies per Director (with more than 2 Movies)");
-        set.setColors(ColorTemplate.VORDIPLOM_COLORS);
+        set.setColors(MY_COLORS);
 
         PieData data = new PieData(set);
+        p.setHoleRadius(50f);
+        p.setTransparentCircleRadius(45f);
         p.setData(data);
-        p.animateY(100);
+        p.animateY(250);
         p.setEntryLabelColor(Color.BLACK);
+        p.setEntryLabelTextSize(10f);
+        set.setSliceSpace(0.8f);
+
         p.invalidate();
     }
 }
