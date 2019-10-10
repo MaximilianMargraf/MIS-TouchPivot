@@ -225,7 +225,6 @@ public class MainActivity extends AppCompatActivity {
 
             if(myData4.size()==0){
                 List<String> directors = util.initDirectors(myData);
-                Log.i(TAG, "Directors size: " + directors.size());
                 for (String s : directors) {
                     myData4.add(new PerDirector(s, myData));
                 }
@@ -310,6 +309,10 @@ public class MainActivity extends AppCompatActivity {
         table.bringToFront();
         for(int i = 0; i < strings.length; i++){
             TableRow tr =  new TableRow(this);
+            tr.setId(i);
+            if(i % 2 == 1){
+                tr.setBackgroundColor(Color.rgb(230, 230, 230));
+            }
             // fill the Textviews of the different
             for(int j = 0; j < strings[0].length; j++){
                 final TextView txt = new TextView(this);
@@ -328,7 +331,7 @@ public class MainActivity extends AppCompatActivity {
                         cm1.setText(strings[0][id]);
 
                         // show movies per year in line chart
-                        if(strings[0][id].equals("Year")) {
+                        if(strings[0][id].equals("Year") || (strings[0][0].equals("Year")&&strings[0][id].equals("Movies"))) {
                             // if both views are not filled yet
                             if ((lineChart1.getVisibility() == View.GONE && barChart1.getVisibility() == View.GONE
                                     && pieChart1.getVisibility() == View.GONE) && (lineChart2.getVisibility() == View.GONE
@@ -347,10 +350,11 @@ public class MainActivity extends AppCompatActivity {
                                     || pieChart1.getVisibility() == View.VISIBLE) && (lineChart2.getVisibility() == View.VISIBLE
                                     || barChart2.getVisibility() == View.VISIBLE || pieChart2.getVisibility() == View.VISIBLE)) {
                                 clearCharts();
+                                moviesPerYear(lineChart1);
                             }
                         }
                         // amount of movies per genre
-                        if(strings[0][id].equals("Genre")) {
+                        else if(strings[0][id].equals("Genre") || (strings[0][0].equals("Genre") && strings[0][id].equals("Movies"))) {
                             if ((lineChart1.getVisibility() == View.GONE && barChart1.getVisibility() == View.GONE
                                     && pieChart1.getVisibility() == View.GONE) && (lineChart2.getVisibility() == View.GONE
                                     && barChart2.getVisibility() == View.GONE && pieChart2.getVisibility() == View.GONE)) {
@@ -367,9 +371,10 @@ public class MainActivity extends AppCompatActivity {
                                     || pieChart1.getVisibility() == View.VISIBLE) && (lineChart2.getVisibility() == View.VISIBLE
                                     || barChart2.getVisibility() == View.VISIBLE || pieChart2.getVisibility() == View.VISIBLE)) {
                                 clearCharts();
+                                moviesPerGenre(barChart1);
                             }
                         }
-                        if(strings[0][id].equals("Director")) {
+                        else if(strings[0][id].equals("Director")) {
                             if ((lineChart1.getVisibility() == View.GONE && barChart1.getVisibility() == View.GONE
                                     && pieChart1.getVisibility() == View.GONE) && (lineChart2.getVisibility() == View.GONE
                                     && barChart2.getVisibility() == View.GONE && pieChart2.getVisibility() == View.GONE)) {
@@ -386,10 +391,11 @@ public class MainActivity extends AppCompatActivity {
                                     || pieChart1.getVisibility() == View.VISIBLE) && (lineChart2.getVisibility() == View.VISIBLE
                                     || barChart2.getVisibility() == View.VISIBLE || pieChart2.getVisibility() == View.VISIBLE)) {
                                 clearCharts();
+                                moviesPerDirector(pieChart1);
                             }
                         }
                         // show rt imdb score over years
-                        if(strings[0][0].equals("Year") && (strings[0][id].equals("Avg. RT") || strings[0][id].equals("Avg. Imdb"))) {
+                        else if(strings[0][0].equals("Year") && (strings[0][id].equals("Avg. RT") || strings[0][id].equals("Avg. IMDb"))) {
                             if ((lineChart1.getVisibility() == View.GONE && barChart1.getVisibility() == View.GONE
                                     && pieChart1.getVisibility() == View.GONE) && (lineChart2.getVisibility() == View.GONE
                                     && barChart2.getVisibility() == View.GONE && pieChart2.getVisibility() == View.GONE)) {
@@ -406,6 +412,108 @@ public class MainActivity extends AppCompatActivity {
                                     || pieChart1.getVisibility() == View.VISIBLE) && (lineChart2.getVisibility() == View.VISIBLE
                                     || barChart2.getVisibility() == View.VISIBLE || pieChart2.getVisibility() == View.VISIBLE)) {
                                 clearCharts();
+                                imdb_rt_score_years(lineChart1);
+                            }
+                        }
+                        // show budget and gross score over years
+                        else if(strings[0][0].equals("Year") && (strings[0][id].equals("Ww. Gross") || strings[0][id].equals("Budget"))) {
+                            if ((lineChart1.getVisibility() == View.GONE && barChart1.getVisibility() == View.GONE
+                                    && pieChart1.getVisibility() == View.GONE) && (lineChart2.getVisibility() == View.GONE
+                                    && barChart2.getVisibility() == View.GONE && pieChart2.getVisibility() == View.GONE)) {
+
+                                gross_budget_years(lineChart1);
+                            }
+                            else if ((lineChart1.getVisibility() == View.VISIBLE || barChart1.getVisibility() == View.VISIBLE
+                                    || pieChart1.getVisibility() == View.VISIBLE) && (lineChart2.getVisibility() == View.GONE
+                                    && barChart2.getVisibility() == View.GONE && pieChart2.getVisibility() == View.GONE)) {
+
+                                gross_budget_years(lineChart2);
+                            }
+                            else if ((lineChart1.getVisibility() == View.VISIBLE || barChart1.getVisibility() == View.VISIBLE
+                                    || pieChart1.getVisibility() == View.VISIBLE) && (lineChart2.getVisibility() == View.VISIBLE
+                                    || barChart2.getVisibility() == View.VISIBLE || pieChart2.getVisibility() == View.VISIBLE)) {
+                                clearCharts();
+                                gross_budget_years(lineChart1);
+                            }
+                        }
+                        else if(strings[0][0].equals("Genre") && strings[0][id].equals("Gross")) {
+                            if ((lineChart1.getVisibility() == View.GONE && barChart1.getVisibility() == View.GONE
+                                    && pieChart1.getVisibility() == View.GONE) && (lineChart2.getVisibility() == View.GONE
+                                    && barChart2.getVisibility() == View.GONE && pieChart2.getVisibility() == View.GONE)) {
+
+                                grossPerGenre(barChart1);
+                            }
+                            else if ((lineChart1.getVisibility() == View.VISIBLE || barChart1.getVisibility() == View.VISIBLE
+                                    || pieChart1.getVisibility() == View.VISIBLE) && (lineChart2.getVisibility() == View.GONE
+                                    && barChart2.getVisibility() == View.GONE && pieChart2.getVisibility() == View.GONE)) {
+
+                                grossPerGenre(barChart2);
+                            }
+                            else if ((lineChart1.getVisibility() == View.VISIBLE || barChart1.getVisibility() == View.VISIBLE
+                                    || pieChart1.getVisibility() == View.VISIBLE) && (lineChart2.getVisibility() == View.VISIBLE
+                                    || barChart2.getVisibility() == View.VISIBLE || pieChart2.getVisibility() == View.VISIBLE)) {
+                                clearCharts();
+                                grossPerGenre(barChart1);
+                            }
+                        }
+                        else if(strings[0][0].equals("Genre") && strings[0][id].equals("Budget")) {
+                            if ((lineChart1.getVisibility() == View.GONE && barChart1.getVisibility() == View.GONE
+                                    && pieChart1.getVisibility() == View.GONE) && (lineChart2.getVisibility() == View.GONE
+                                    && barChart2.getVisibility() == View.GONE && pieChart2.getVisibility() == View.GONE)) {
+
+                                budgetPerGenre(barChart1);
+                            }
+                            else if ((lineChart1.getVisibility() == View.VISIBLE || barChart1.getVisibility() == View.VISIBLE
+                                    || pieChart1.getVisibility() == View.VISIBLE) && (lineChart2.getVisibility() == View.GONE
+                                    && barChart2.getVisibility() == View.GONE && pieChart2.getVisibility() == View.GONE)) {
+
+                                budgetPerGenre(barChart2);
+                            }
+                            else if ((lineChart1.getVisibility() == View.VISIBLE || barChart1.getVisibility() == View.VISIBLE
+                                    || pieChart1.getVisibility() == View.VISIBLE) && (lineChart2.getVisibility() == View.VISIBLE
+                                    || barChart2.getVisibility() == View.VISIBLE || pieChart2.getVisibility() == View.VISIBLE)) {
+                                clearCharts();
+                                budgetPerGenre(barChart1);
+                            }
+                        }
+                        else if(strings[0][0].equals("Genre") && strings[0][id].equals("Avg. RT")) {
+                            if ((lineChart1.getVisibility() == View.GONE && barChart1.getVisibility() == View.GONE
+                                    && pieChart1.getVisibility() == View.GONE) && (lineChart2.getVisibility() == View.GONE
+                                    && barChart2.getVisibility() == View.GONE && pieChart2.getVisibility() == View.GONE)) {
+
+                                avgRTPerGenre(barChart1);
+                            }
+                            else if ((lineChart1.getVisibility() == View.VISIBLE || barChart1.getVisibility() == View.VISIBLE
+                                    || pieChart1.getVisibility() == View.VISIBLE) && (lineChart2.getVisibility() == View.GONE
+                                    && barChart2.getVisibility() == View.GONE && pieChart2.getVisibility() == View.GONE)) {
+
+                                avgRTPerGenre(barChart2);
+                            }
+                            else if ((lineChart1.getVisibility() == View.VISIBLE || barChart1.getVisibility() == View.VISIBLE
+                                    || pieChart1.getVisibility() == View.VISIBLE) && (lineChart2.getVisibility() == View.VISIBLE
+                                    || barChart2.getVisibility() == View.VISIBLE || pieChart2.getVisibility() == View.VISIBLE)) {
+                                clearCharts();
+                                avgRTPerGenre(barChart1);
+                            }
+                        }
+                        else if(strings[0][0].equals("Genre") && strings[0][id].equals("Avg. IMDb")) {
+                            if ((lineChart1.getVisibility() == View.GONE && barChart1.getVisibility() == View.GONE
+                                    && pieChart1.getVisibility() == View.GONE) && (lineChart2.getVisibility() == View.GONE
+                                    && barChart2.getVisibility() == View.GONE && pieChart2.getVisibility() == View.GONE)) {
+
+                                avgIMDBPerGenre(barChart1);
+                            }
+                            else if ((lineChart1.getVisibility() == View.VISIBLE || barChart1.getVisibility() == View.VISIBLE
+                                    || pieChart1.getVisibility() == View.VISIBLE) && (lineChart2.getVisibility() == View.GONE
+                                    && barChart2.getVisibility() == View.GONE && pieChart2.getVisibility() == View.GONE)) {
+
+                                avgIMDBPerGenre(barChart2);
+                            }
+                            else if ((lineChart1.getVisibility() == View.VISIBLE || barChart1.getVisibility() == View.VISIBLE
+                                    || pieChart1.getVisibility() == View.VISIBLE) && (lineChart2.getVisibility() == View.VISIBLE
+                                    || barChart2.getVisibility() == View.VISIBLE || pieChart2.getVisibility() == View.VISIBLE)) {
+                                clearCharts();
+                                avgIMDBPerGenre(barChart1);
                             }
                         }
                     }
@@ -421,20 +529,23 @@ public class MainActivity extends AppCompatActivity {
                             initTable(strings);
                             cm1.setText("Year");
                         }
-                        if(strings[0][id].equals("Genre") || strings[0][id].equals("Dom. genre") || strings[0][id].equals("Fav. genre")){
+                        else if(strings[0][id].equals("Genre") || strings[0][id].equals("Dom. genre") || strings[0][id].equals("Fav. genre")){
                             table.removeAllViews();
                             String[][] strings = util.initPerGenreArray(myData3);
                             initTable(strings);
                             cm1.setText("Genre");
                         }
-                        if(strings[0][id].equals("Director")){
+                        else if(strings[0][id].equals("Director")){
                             table.removeAllViews();
                             String[][] strings = util.initPerDirectorArray(myData4);
                             initTable(strings);
                             cm1.setText("Directors");
                         }
-                        if(strings[0][id].equals("Year")){
-
+                        else if(strings[0][id].equals("Best movie")||strings[0][id].equals("Movies")){
+                            table.removeAllViews();
+                            String[][] strings = util.initMovieArray(myData);
+                            initTable(strings);
+                            cm1.setText("Title");
                         }
                         return true;
                     }
@@ -520,11 +631,10 @@ public class MainActivity extends AppCompatActivity {
 
         // make line chart with entries
         LineDataSet dataSet = new LineDataSet(entries, "Movies per Year");
-        //dataSet.setAxisDependency(YAxis.AxisDependency.LEFT);
 
         dataSet.setColor(MY_COLORS[5]);
-        dataSet.setCircleColor(MY_COLORS[0]);
-        dataSet.setCircleRadius(3.5f);
+        dataSet.setCircleColor(MY_COLORS[3]);
+        dataSet.setCircleRadius(1f);
         dataSet.setValueTextSize(8f);
 
         LineData lineData = new LineData(dataSet);
@@ -535,8 +645,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void moviesPerGenre(BarChart b){
-        //final int[] colors = {Color.rgb(255, 255, 255), };
-
         b.setVisibility(View.VISIBLE);
         b.getDescription().setEnabled(false);
         b.setMaxVisibleValueCount(10);
@@ -572,6 +680,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void moviesPerDirector(PieChart p){
         p.setVisibility(View.VISIBLE);
+        p.getDescription().setEnabled(false);
         // total amount of movies
         List<PieEntry> entries = new ArrayList<>();
         for(PerDirector d : myData4){
@@ -653,5 +762,200 @@ public class MainActivity extends AppCompatActivity {
         l.setData(lineData);
         l.animateY(100);
         l.invalidate(); // refresh
+    }
+
+    public void gross_budget_years(LineChart l){
+        l.setVisibility(View.VISIBLE);
+        l.getDescription().setEnabled(false);
+        l.setDrawGridBackground(false);
+        l.getXAxis().setDrawAxisLine(false);
+
+        //prep entries
+        List<Entry> entries1 = new ArrayList<>();
+        for (PerYear perYear : myData2) {
+            entries1.add(new Entry(perYear.year_, perYear.grossedPerYear_));
+        }
+        List<Entry> entries2 = new ArrayList<>();
+        for (PerYear perYear : myData2) {
+            entries2.add(new Entry(perYear.year_, perYear.budgetPerYear_));
+        }
+
+        XAxis xAxis = l.getXAxis();
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setTypeface(tfLight);
+        xAxis.setTextSize(10f);
+        xAxis.setTextColor(Color.BLACK);
+        xAxis.setLabelCount(entries1.size());
+        xAxis.setLabelCount(118);
+        xAxis.setDrawGridLines(false);
+        xAxis.setLabelRotationAngle(-90);
+
+        YAxis leftAxis = l.getAxisLeft();
+        leftAxis.setLabelCount(5, false);
+        leftAxis.setAxisMinimum(0f);
+
+        YAxis rightAxis = l.getAxisRight();
+        rightAxis.setLabelCount(5, false);
+        rightAxis.setDrawGridLines(false);
+        rightAxis.setAxisMinimum(0f);
+
+        // make line chart with entries
+        LineDataSet dataSet1 = new LineDataSet(entries1, "Worldwide Gross");
+        LineDataSet dataSet2 = new LineDataSet(entries2, "Worldwide movie budget");
+
+        dataSet1.setColor(MY_COLORS[5]);
+        dataSet1.setCircleColor(MY_COLORS[0]);
+        dataSet1.setCircleRadius(1f);
+        dataSet1.setValueTextSize(8f);
+
+        dataSet2.setColor(MY_COLORS[4]);
+        dataSet2.setCircleColor(MY_COLORS[1]);
+        dataSet2.setCircleRadius(1f);
+        dataSet2.setValueTextSize(8f);
+
+        List<ILineDataSet> datas = new ArrayList<>();
+        datas.add(dataSet1);
+        datas.add(dataSet2);
+
+        LineData lineData = new LineData(datas);
+        l.setData(lineData);
+        l.animateY(100);
+        l.invalidate(); // refresh
+    }
+
+    public void grossPerGenre(BarChart b){
+        b.setVisibility(View.VISIBLE);
+        b.getDescription().setEnabled(false);
+        b.setMaxVisibleValueCount(10);
+
+        List<BarEntry> entries = new ArrayList<>();
+        for(int i = 0; i < myData3.size(); i++){
+            entries.add(new BarEntry(i, myData3.get(i).gross_genre_));
+        }
+        BarDataSet set = new BarDataSet(entries, "Worldwide gross per genre");
+
+        set.setColors(MY_COLORS);
+
+        BarData data = new BarData(set);
+        data.setBarWidth(0.9f); // set custom bar width
+        b.setData(data);
+        b.setFitBars(true); // make the x-axis fit exactly all bars
+
+        List<String> xAxisLabel = new ArrayList<>(Arrays.asList( "Action", "Adventure",
+                "Black Comedy", "Comedy", "Concert", "Crime", "Documentary",
+                "Drama", "Horror", "Musical", "Romantic Comedy", "Romantic Drama",
+                "Thriller", "Western"));
+        XAxis xAxis = b.getXAxis();
+        xAxis.setValueFormatter(new IndexAxisValueFormatter(xAxisLabel));
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setDrawGridLines(false);
+        xAxis.setLabelCount(xAxisLabel.size());
+        xAxis.setLabelRotationAngle(-60);
+
+        b.getAxisLeft().setDrawGridLines(false);
+        b.animateY(100);
+        b.invalidate(); // refresh
+    }
+
+    public void budgetPerGenre(BarChart b){
+        b.setVisibility(View.VISIBLE);
+        b.getDescription().setEnabled(false);
+        b.setMaxVisibleValueCount(10);
+
+        List<BarEntry> entries = new ArrayList<>();
+        for(int i = 0; i < myData3.size(); i++){
+            entries.add(new BarEntry(i, myData3.get(i).budget_genre_));
+        }
+        BarDataSet set = new BarDataSet(entries, "Budget per genre");
+
+        set.setColors(MY_COLORS);
+
+        BarData data = new BarData(set);
+        data.setBarWidth(0.9f); // set custom bar width
+        b.setData(data);
+        b.setFitBars(true); // make the x-axis fit exactly all bars
+
+        List<String> xAxisLabel = new ArrayList<>(Arrays.asList( "Action", "Adventure",
+                "Black Comedy", "Comedy", "Concert", "Crime", "Documentary",
+                "Drama", "Horror", "Musical", "Romantic Comedy", "Romantic Drama",
+                "Thriller", "Western"));
+        XAxis xAxis = b.getXAxis();
+        xAxis.setValueFormatter(new IndexAxisValueFormatter(xAxisLabel));
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setDrawGridLines(false);
+        xAxis.setLabelCount(xAxisLabel.size());
+        xAxis.setLabelRotationAngle(-60);
+
+        b.getAxisLeft().setDrawGridLines(false);
+        b.animateY(100);
+        b.invalidate(); // refresh
+    }
+
+    public void avgRTPerGenre(BarChart b){
+        b.setVisibility(View.VISIBLE);
+        b.getDescription().setEnabled(false);
+        b.setMaxVisibleValueCount(10);
+
+        List<BarEntry> entries = new ArrayList<>();
+        for(int i = 0; i < myData3.size(); i++){
+            entries.add(new BarEntry(i, myData3.get(i).avg_rt_score_genre_));
+        }
+        BarDataSet set = new BarDataSet(entries, "Avg. Rotten Tomatoes score per genre");
+
+        set.setColors(MY_COLORS);
+
+        BarData data = new BarData(set);
+        data.setBarWidth(0.9f); // set custom bar width
+        b.setData(data);
+        b.setFitBars(true); // make the x-axis fit exactly all bars
+
+        List<String> xAxisLabel = new ArrayList<>(Arrays.asList( "Action", "Adventure",
+                "Black Comedy", "Comedy", "Concert", "Crime", "Documentary",
+                "Drama", "Horror", "Musical", "Romantic Comedy", "Romantic Drama",
+                "Thriller", "Western"));
+        XAxis xAxis = b.getXAxis();
+        xAxis.setValueFormatter(new IndexAxisValueFormatter(xAxisLabel));
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setDrawGridLines(false);
+        xAxis.setLabelCount(xAxisLabel.size());
+        xAxis.setLabelRotationAngle(-60);
+
+        b.getAxisLeft().setDrawGridLines(false);
+        b.animateY(100);
+        b.invalidate(); // refresh
+    }
+
+    public void avgIMDBPerGenre(BarChart b){
+        b.setVisibility(View.VISIBLE);
+        b.getDescription().setEnabled(false);
+        b.setMaxVisibleValueCount(10);
+
+        List<BarEntry> entries = new ArrayList<>();
+        for(int i = 0; i < myData3.size(); i++){
+            entries.add(new BarEntry(i, myData3.get(i).avg_imdb_score_genre_));
+        }
+        BarDataSet set = new BarDataSet(entries, "Avg. IMDb score per genre");
+
+        set.setColors(MY_COLORS);
+
+        BarData data = new BarData(set);
+        data.setBarWidth(0.9f); // set custom bar width
+        b.setData(data);
+        b.setFitBars(true); // make the x-axis fit exactly all bars
+
+        List<String> xAxisLabel = new ArrayList<>(Arrays.asList( "Action", "Adventure",
+                "Black Comedy", "Comedy", "Concert", "Crime", "Documentary",
+                "Drama", "Horror", "Musical", "Romantic Comedy", "Romantic Drama",
+                "Thriller", "Western"));
+        XAxis xAxis = b.getXAxis();
+        xAxis.setValueFormatter(new IndexAxisValueFormatter(xAxisLabel));
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setDrawGridLines(false);
+        xAxis.setLabelCount(xAxisLabel.size());
+        xAxis.setLabelRotationAngle(-60);
+
+        b.getAxisLeft().setDrawGridLines(false);
+        b.animateY(100);
+        b.invalidate(); // refresh
     }
 }

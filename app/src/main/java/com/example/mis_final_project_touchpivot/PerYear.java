@@ -68,5 +68,11 @@ public class PerYear {
 
         this.mostCommonGenre_ = genre;
         this.IMDBbestMovie_ = top_rated.title_;
+
+        /*
+        for(Map.Entry<String, Integer> pair : hm.entrySet()){
+            System.out.println("Genre: "+pair.getKey()+", Amount per Year: "+pair.getValue());
+        }
+        */
     }
 }

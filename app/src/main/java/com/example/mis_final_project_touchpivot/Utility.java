@@ -16,7 +16,7 @@ public class Utility {
         strings[0][4] = "Genre";
         strings[0][5] = "Director";
         strings[0][6] = "RT";
-        strings[0][7] = "Imdb";
+        strings[0][7] = "IMDb";
         for(int i = 1; i <l.size()+1;i++){
             for(int j = 0; j < 8; j++){
                 switch (j) {
@@ -54,13 +54,13 @@ public class Utility {
         int length = l.size();
         String[][] strings = new String[length+1][8];
         strings[0][0] = "Year";
-        strings[0][1] = "Gross";
+        strings[0][1] = "Ww. Gross";
         strings[0][2] = "Budget";
         strings[0][3] = "Movies";
         strings[0][4] = "Dom. genre";
         strings[0][5] = "Avg. RT";
-        strings[0][6] = "Avg. Imdb";
-        strings[0][7] = "B. movie";
+        strings[0][6] = "Avg. IMDb";
+        strings[0][7] = "Best movie";
         for(int i = 1; i <l.size()+1;i++){
             for(int j = 0; j < 8; j++){
                 switch (j) {
@@ -103,7 +103,7 @@ public class Utility {
         strings[0][2] = "Gross";
         strings[0][3] = "Budget";
         strings[0][4] = "Avg. RT";
-        strings[0][5] = "Avg. Imdb";
+        strings[0][5] = "Avg. IMDb";
         strings[0][6] = "Best movie";
         for(int i = 1; i <l.size()+1;i++){
             for(int j = 0; j < 8; j++){
@@ -143,7 +143,7 @@ public class Utility {
         strings[0][2] = "Budget";
         strings[0][3] = "Movies";
         strings[0][4] = "Avg. RT";
-        strings[0][5] = "Avg. Imdb";
+        strings[0][5] = "Avg. IMDb";
         strings[0][6] = "Fav. genre";
         strings[0][7] = "Best movie";
         for(int i = 1; i <l.size()+1;i++){
